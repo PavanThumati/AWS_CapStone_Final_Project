@@ -1,0 +1,13 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      kubectl: 1.29
+    commands:
+      - echo Installing kubectl and aws CLI
+      - aws eks update-kubeconfig --name $CLUSTER_NAME --region $REGION
+  build:
+    commands:
+      - kubectl apply -f frontend-deployment.yaml
+      - kubectl apply -f backend-deployment.yaml
