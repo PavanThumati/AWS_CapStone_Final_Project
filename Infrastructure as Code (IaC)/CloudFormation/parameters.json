@@ -1,0 +1,10 @@
+{
+  "Parameters": {
+    "GitHubRepo": "PavanThumati/php-flask-application",
+    "GitHubBranch": "main",
+    "GitHubConnectionArn": "arn:aws:codeconnections:us-east-1:047719630685:connection/efcdf443-efca-4997-aec9-fb982bfe4c59",
+    "DBUsername": "admin",
+    "DBPassword": "adminadmin",
+    "EKSAdminIAMArn": "arn:aws:iam::047719630685:user/Admin-USer"
+  }
+}
