@@ -120,7 +120,7 @@ project-root/
 
 ## 📬 Contact
  
-GitHub – [YourGitHubUsername](https://github.com/PavanThumati)
+GitHub – [Pavan Thumati](https://github.com/PavanThumati)
 
 ---
 
