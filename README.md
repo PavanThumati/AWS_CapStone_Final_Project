@@ -202,5 +202,3 @@ The DR strategy ensures the application remains available even in the event of a
 ## 👋 Contributing
 
 Contributions are welcome! Please fork the repository and submit a pull request with your improvements.
-
-````
