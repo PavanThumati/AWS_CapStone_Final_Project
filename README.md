@@ -128,6 +128,11 @@ The CI/CD pipeline automates the journey of your application code from GitHub to
     * ECR's private image scanning feature provides an additional layer of security post-push.
 4.  **Deploy Stage (EKS):**
     * CodeBuild or a direct CodePipeline action applies the Kubernetes manifests (e.g., `Deployment`, `Service`, `Ingress`) to the Amazon EKS cluster in `us-east-1`. This updates the application to the latest version.
+┌────────────┐       ┌────────────┐       ┌──────────────┐       ┌────────────┐
+│  GitHub    │ ───▶  │ CodeBuild  │ ───▶  │ EKS/Kubernetes│ ───▶ │ CodeDeploy │
+└────────────┘       └────────────┘       └──────────────┘       └────────────┘
+     ▲                        │                   │                       │
+     └─────────────[Triggered on push]────────────┴────[Rolling updates / hooks]
 
 ## 🌐 Disaster Recovery Strategy
 
