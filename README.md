@@ -86,13 +86,20 @@ This project demonstrates a highly available, fault-tolerant **Three-Tier Archit
 ## 📦 Project Structure
 project-root/
 │
-├── terraform/ # Infrastructure code for us-east-1
-├── cloudformation/ # Infrastructure templates for us-west-1
-├── app/ # Flask application code
-├── web/ # PHP web code
-├── pipeline/ # CodePipeline and CodeBuild configurations
-├── manifests/ # Kubernetes manifests for EKS deployment
-└── README.md # You're here!
+├── terraform/         # Infrastructure as Code (IaC) for us-east-1 (Terraform)
+│
+├── cloudformation/    # CloudFormation templates for us-west-1 infrastructure and pipeline
+│
+├── app/               # Flask application (Application Tier)
+│
+├── web/               # PHP-based frontend (Web Tier)
+│
+├── pipeline/          # CodePipeline and CodeBuild configurations (CI/CD)
+│
+├── manifests/         # Kubernetes manifests for deploying to EKS clusters
+│
+└── README.md          # Project documentation
+
 
 
 ---
