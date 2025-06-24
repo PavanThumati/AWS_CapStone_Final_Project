@@ -130,13 +130,13 @@ The CI/CD pipeline automates the journey of your application code from GitHub to
     * CodeBuild or a direct CodePipeline action applies the Kubernetes manifests (e.g., `Deployment`, `Service`, `Ingress`) to the Amazon EKS cluster in `us-east-1`. This updates the application to the latest version.
 
                
-                     ```
+                     
                ┌────────────┐       ┌────────────┐       ┌──────────────┐       ┌────────────┐
-               │  GitHub    │ ───▶ │ CodeBuild  │ ───▶  │       ECR    │ ───▶ │EKS/Kubernetes│
+               │  GitHub    │ ───▶ │ CodeBuild  │ ───▶  │     ECR      │ ───▶ │EKS/Kubernetes│
                └────────────┘       └────────────┘       └──────────────┘       └────────────┘
                     ▲                        │                   │                       │
                     └─────────────[Triggered on push]────────────┴────[Rolling updates / hooks]
-               ```
+               
 
 ## 🌐 Disaster Recovery Strategy
 
