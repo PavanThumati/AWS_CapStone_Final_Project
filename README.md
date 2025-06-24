@@ -84,4 +84,36 @@ This project demonstrates a highly available, fault-tolerant **Three-Tier Archit
 ---
 
 ## 📦 Project Structure
+project-root/
+│
+├── terraform/ # Infrastructure code for us-east-1
+├── cloudformation/ # Infrastructure templates for us-west-1
+├── app/ # Flask application code
+├── web/ # PHP web code
+├── pipeline/ # CodePipeline and CodeBuild configurations
+├── manifests/ # Kubernetes manifests for EKS deployment
+└── README.md # You're here!
+
+
+---
+
+## 🔒 Security
+
+- Image scanning with **Trivy** during the CI/CD pipeline
+- Static code analysis with **SonarQube**
+
+---
+
+## 🧪 Quality Checks
+
+- Trivy reports vulnerabilities in Docker images
+- SonarQube provides code quality and maintainability metrics
+
+---
+
+## 📬 Contact
+ 
+GitHub – [YourGitHubUsername](https://github.com/PavanThumati)
+
+---
 
