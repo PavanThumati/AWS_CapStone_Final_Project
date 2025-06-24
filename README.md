@@ -11,40 +11,43 @@ This project implements a highly available and resilient multi-tier web applicat
 While a visual diagram is best viewed in a dedicated tool, this section describes the high-level layout. Imagine two distinct AWS regions, `us-east-1` (Primary) and `us-west-2` (Disaster Recovery), connected globally via Route 53.
 
 ```
+53.
 
-\+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                    GLOBAL SERVICES                                                                                |
 |                                                                                                                                                                     |
 |  +---------------------+                                                                                                                                            |
 |  |     Amazon Route 53   |                                                                                                                                            |
 |  | (Failover Routing)  |--------------------------------------------------+----------------------------------------------------------------------------------+       |
-|  +---------------------+                                                  |                                                                                  |       |
+|  +---------------------+                                                  | (Routes to ALB)                                                                  | (Routes to ALB)       |
 |                                                                           |                                                                                  |       |
-\+---------------------------------------------------------------------------|----------------------------------------------------------------------------------|-------+
-|                                                                                  |
-|                                                                                  |
-\+---------------------------------------------------------------------------|---------------------------------+--------------------------------------------------|-------+
++---------------------------------------------------------------------------|----------------------------------------------------------------------------------|-------+
+                                                                            |                                                                                  |
+                                                                            |                                                                                  |
++---------------------------------------------------------------------------|---------------------------------+--------------------------------------------------|-------+
 |                                  REGION A (PRIMARY - us-east-1)           |                                 |   REGION B (DISASTER RECOVERY - us-west-2)     |
 |                                                                           |                                 |                                                  |
 |  +---------------------------+       +-------------------------------+    |    +---------------------------+       +------------------------------------+      |
 |  |       Networking          |       |        CI/CD Pipeline         |    |    |       Networking          |       |      CI/CD Pipeline (Mirrored)     |      |
-|  | - VPC                     |       | - GitHub (Source)             |    |    | - Duplicate VPC           |       | - CodePipeline                     |      |
-|  | - Public/Private Subnets  |       | - CodeStar Connection         |    |    | - Public/Private Subnets  |       | - CodeBuild                        |      |
-|  | - Internet Gateway (IGW)  |       | - CodePipeline                |    |    | - Internet Gateway (IGW)  |       |   (Terraform based deployment)     |      |
-|  | - NAT Gateway             |       |   - Build (CodeBuild +        |    |    | - NAT Gateway             |       |                                    |      |
-|  +---------------------------+       |     SonarQube, Trivy)         |    |    +---------------------------+       +------------------------------------+      |
-|            |                         |   - ECR Push (Trivy Scan)     |    |              |                                                                     |
-|            |                         |   - Deploy (EKS, K8s Manifests)|    |              |                                                                     |
-|            |                         +-------------------------------+    |              |                                                                     |
-|            |                                    |                         |              |                                                                     |
-|  +---------------------------+       +-------------------------------+    |    +---------------------------+                                             |
-|  |     Application Tier      |       |      Container Registry       |    |    |     Application Tier      |                                             |
-|  | - Amazon EKS Cluster      |-------| - Amazon ECR                  |    |    | - Duplicate Amazon EKS    |                                             |
-|  |   - 2+ Node Groups        |       |   (Private Image Scanning)    |    |    |   Cluster                 |                                             |
-|  |   - PHP Frontend          |       +-------------------------------+    |    |   - 2+ Node Groups        |                                             |
-|  |   - Flask/Python Backend  |                                           |    |   - PHP Frontend (DR)     |                                             |
-|  +---------------------------+                                           |    |   - Flask/Python Backend (DR)|                                             |
-|            |                                                             |    +---------------------------+                                             |
+|  | - VPC                     |       | - GitHub (Source)             |    |    | - Duplicate VPC           |       | - GitHub (Source - mirrored)       |      |
+|  | - Public/Private Subnets  |       | - CodeStar Connection         |    |    | - Public/Private Subnets  |       | - CodeStar Connection              |      |
+|  | - Internet Gateway (IGW)  |       | - CodePipeline                |    |    | - Internet Gateway (IGW)  |       | - CodePipeline                     |      |
+|  | - NAT Gateway             |       |   - Build (CodeBuild +        |    |    | - NAT Gateway             |       |   - Build (CodeBuild +             |      |
+|  +---------------------------+       |     SonarQube, Trivy)         |    |    +---------------------------+       |     SonarQube, Trivy)              |      |
+|            |                         |   - ECR Push (Trivy Scan)     |    |              |                         |   - ECR Push (Trivy Scan)          |      |
+|            |                         |   - Deploy (EKS, K8s Manifests)|    |              |                         |   - Deploy (EKS, K8s Manifests)    |      |
+|            |                         +-------------------------------+    |              |                         +------------------------------------+      |
+|            |                                    |                         |              |                                    |                                |
+|            |                                    |                         |              |                                    |                                |
+|  +---------------------------+       +-------------------------------+    |    +---------------------------+       +-------------------------------+         |
+|  |     Application Tier      |-------|      Container Registry       |    |    |     Application Tier      |-------|      Container Registry       |         |
+|  | - Amazon EKS Cluster      |-------| - Amazon ECR                  |    |    | - Duplicate Amazon EKS    |-------| - Amazon ECR                  |         |
+|  |   - 2+ Node Groups        |       |   (Private Image Scanning)    |    |    |   Cluster                 |       |   (Private Image Scanning)    |         |
+|  |   - PHP Frontend          |       +-------------------------------+    |    |   - 2+ Node Groups        |       +-------------------------------+         |
+|  |   - Flask/Python Backend  |                                           |    |   - PHP Frontend (DR)     |                                                  |
+|  |   - (ALB/NLB for web tier)|                                           |    |   - Flask/Python Backend (DR)|                                                  |
+|  +---------------------------+                                           |    |   - (ALB/NLB for web tier)|                                                  |
+|            |                                                             |    +---------------------------+                                                  |
 |            |                                                             |              |                                                                     |
 |  +---------------------------+                                           |    +---------------------------+                                             |
 |  |      Database Tier        |                                           |    |     Database Tier         |                                             |
@@ -56,10 +59,10 @@ While a visual diagram is best viewed in a dedicated tool, this section describe
 |  |   Monitoring & Alerting   |                                            |                                                                                  |
 |  | - Amazon CloudWatch       |                                            |                                                                                  |
 |  |   - Log Groups            |                                            |                                                                                  |
-|  |   - Alarms (EKS CPU \> 75%)|                                            |                                                                                  |
+|  |   - Alarms (EKS CPU > 75%)|                                            |                                                                                  |
 |  | - Amazon SNS (Alerts)     |                                            |                                                                                  |
 |  +---------------------------+                                            |                                                                                  |
-\+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 ````
 
