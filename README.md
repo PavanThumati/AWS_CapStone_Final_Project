@@ -1,109 +1,198 @@
-# Multi-Region AWS Infrastructure for CI/CD-Driven Application with Disaster Recovery
+# AWS Capstone Final Project: Multi-Region CI/CD-Driven Application with Disaster Recovery
 
-![Architecture Diagram](docs/architecture.png)
+This repository hosts the infrastructure as code, application code, and documentation for a robust, multi-tier application deployed across multiple AWS regions with a focus on automated CI/CD and comprehensive disaster recovery capabilities.
 
-## Table of Contents
-- [Overview](#overview)  
-- [Architecture Diagram](#architecture-diagram)  
-- [Core Components](#core-components)  
-  - [Application Layer](#application-layer)  
-  - [Region A (Primary – us-east-1)](#region-a-primary––us-east-1)  
-  - [Region B (Disaster Recovery – us-west-2)](#region-b-disaster-recovery––us-west-2)  
-  - [Global Services](#global-services)  
-  - [Additional Features](#additional-features)  
-- [Prerequisites](#prerequisites)  
-- [Getting Started](#getting-started)  
-  - [1. Clone the Repo](#1-clone-the-repo)  
-  - [2. Deploy Region A (CloudFormation)](#2-deploy-region-a-cloudformation)  
-  - [3. Deploy Region B (Terraform)](#3-deploy-region-b-terraform)  
-  - [4. Verify Route 53 Failover](#4-verify-route-53-failover)  
-- [Directory Structure](#directory-structure)  
-- [Contributing](#contributing)  
-- [License](#license)  
+## 🌟 Project Overview
 
----
+This project implements a highly available and resilient multi-tier web application featuring a PHP frontend and a Flask/Python backend, leveraging Amazon Elastic Kubernetes Service (EKS) for container orchestration, Amazon RDS for database services, and a sophisticated CI/CD pipeline for automated deployments. A key aspect is the multi-region active-passive disaster recovery strategy, ensuring business continuity with minimal downtime.
 
-## Overview
-This repository contains all the artifacts, Infrastructure-as-Code (IaC) stacks, Kubernetes manifests, and the finalized AWS architecture diagram for a **multi-region**, **CI/CD-driven** web application with built-in **disaster recovery**. The application front-end is written in PHP, the back-end uses Flask/Python, and the database is Amazon RDS (MySQL) configured in Multi-AZ.
+## 🚀 Architecture Diagram (Conceptual)
 
----
+While a visual diagram is best viewed in a dedicated tool, this section describes the high-level layout. Imagine two distinct AWS regions, `us-east-1` (Primary) and `us-west-2` (Disaster Recovery), connected globally via Route 53.
 
-## Architecture Diagram
-![Multi-Region AWS CI/CD Diagram](docs/architecture.png)  
-> **Highlights**  
-> - Two regions (Primary – us-east-1, DR – us-west-2) with separate VPCs, subnets, NAT/Internet Gateways  
-> - EKS clusters hosting PHP front-end & Flask back-end  
-> - RDS MySQL Multi-AZ (primary) + DR replica/snapshot plan  
-> - CI/CD pipelines: Region A via CloudFormation & CodePipeline; Region B via Terraform & mirrored pipelines  
-> - Global Route 53 failover routing with health checks  
-> - Monitoring via CloudWatch, alerts via SNS  
+```
 
----
+\+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                    GLOBAL SERVICES                                                                                |
+|                                                                                                                                                                     |
+|  +---------------------+                                                                                                                                            |
+|  |     Amazon Route 53   |                                                                                                                                            |
+|  | (Failover Routing)  |--------------------------------------------------+----------------------------------------------------------------------------------+       |
+|  +---------------------+                                                  |                                                                                  |       |
+|                                                                           |                                                                                  |       |
+\+---------------------------------------------------------------------------|----------------------------------------------------------------------------------|-------+
+|                                                                                  |
+|                                                                                  |
+\+---------------------------------------------------------------------------|---------------------------------+--------------------------------------------------|-------+
+|                                  REGION A (PRIMARY - us-east-1)           |                                 |   REGION B (DISASTER RECOVERY - us-west-2)     |
+|                                                                           |                                 |                                                  |
+|  +---------------------------+       +-------------------------------+    |    +---------------------------+       +------------------------------------+      |
+|  |       Networking          |       |        CI/CD Pipeline         |    |    |       Networking          |       |      CI/CD Pipeline (Mirrored)     |      |
+|  | - VPC                     |       | - GitHub (Source)             |    |    | - Duplicate VPC           |       | - CodePipeline                     |      |
+|  | - Public/Private Subnets  |       | - CodeStar Connection         |    |    | - Public/Private Subnets  |       | - CodeBuild                        |      |
+|  | - Internet Gateway (IGW)  |       | - CodePipeline                |    |    | - Internet Gateway (IGW)  |       |   (Terraform based deployment)     |      |
+|  | - NAT Gateway             |       |   - Build (CodeBuild +        |    |    | - NAT Gateway             |       |                                    |      |
+|  +---------------------------+       |     SonarQube, Trivy)         |    |    +---------------------------+       +------------------------------------+      |
+|            |                         |   - ECR Push (Trivy Scan)     |    |              |                                                                     |
+|            |                         |   - Deploy (EKS, K8s Manifests)|    |              |                                                                     |
+|            |                         +-------------------------------+    |              |                                                                     |
+|            |                                    |                         |              |                                                                     |
+|  +---------------------------+       +-------------------------------+    |    +---------------------------+                                             |
+|  |     Application Tier      |       |      Container Registry       |    |    |     Application Tier      |                                             |
+|  | - Amazon EKS Cluster      |-------| - Amazon ECR                  |    |    | - Duplicate Amazon EKS    |                                             |
+|  |   - 2+ Node Groups        |       |   (Private Image Scanning)    |    |    |   Cluster                 |                                             |
+|  |   - PHP Frontend          |       +-------------------------------+    |    |   - 2+ Node Groups        |                                             |
+|  |   - Flask/Python Backend  |                                           |    |   - PHP Frontend (DR)     |                                             |
+|  +---------------------------+                                           |    |   - Flask/Python Backend (DR)|                                             |
+|            |                                                             |    +---------------------------+                                             |
+|            |                                                             |              |                                                                     |
+|  +---------------------------+                                           |    +---------------------------+                                             |
+|  |      Database Tier        |                                           |    |     Database Tier         |                                             |
+|  | - Amazon RDS (MySQL)      |                                           |    | - Amazon RDS (MySQL)      |                                             |
+|  |   - Multi-AZ Deployment   |                                           |    |   (DR/Replica/Snapshot)   |                                             |
+|  +---------------------------+                                           |    +---------------------------+                                             |
+|                                                                           |                                                                                  |
+|  +---------------------------+                                            |                                                                                  |
+|  |   Monitoring & Alerting   |                                            |                                                                                  |
+|  | - Amazon CloudWatch       |                                            |                                                                                  |
+|  |   - Log Groups            |                                            |                                                                                  |
+|  |   - Alarms (EKS CPU \> 75%)|                                            |                                                                                  |
+|  | - Amazon SNS (Alerts)     |                                            |                                                                                  |
+|  +---------------------------+                                            |                                                                                  |
+\+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-## Core Components
+````
 
-### Application Layer
-- **Frontend**: PHP application deployed on Amazon EKS.  
-- **Backend**: Flask (Python) services on the same EKS cluster.  
-- **Database**: Amazon RDS MySQL in Multi-AZ for high availability.
+## ✨ Features
 
-### Region A (Primary – us-east-1)
-**Networking**  
-- VPC with 2× public & 2× private subnets across AZ-a & AZ-b  
-- Internet Gateway (IGW) in public subnets  
-- NAT Gateway in each AZ for outbound internet from private subnets  
+* **Multi-Tier Application:**
+    * **Frontend:** PHP application served via EKS.
+    * **Backend:** Flask and Python application with JWT authentication, deployed on EKS.
+    * **Database:** Amazon RDS for MySQL with Multi-AZ deployment for high availability.
+* **Automated CI/CD:**
+    * Source code management with GitHub.
+    * Automated build, test, and deployment using AWS CodePipeline and CodeBuild.
+    * Container image management with Amazon ECR.
+* **Code Quality & Security:**
+    * Static code analysis with **SonarQube** integration in the build process.
+    * Container image vulnerability scanning with **Trivy** pre-push to ECR.
+* **Multi-Region Disaster Recovery (DR):**
+    * Active-passive DR strategy utilizing `us-east-1` as primary and `us-west-2` as DR region.
+    * Automated failover routing via Amazon Route 53 health checks.
+    * Duplicate infrastructure in the DR region, provisioned via Terraform for consistency.
+* **Robust Monitoring & Alerting:**
+    * Centralized logging and metrics with Amazon CloudWatch.
+    * Real-time alerts via Amazon SNS (e.g., EKS Node CPU utilization exceeding 75%).
+* **Security Best Practices:**
+    * Granular IAM roles and service-linked roles for AWS services.
+    * VPC private subnets for application and database tiers.
 
-**Compute & Storage**  
-- Amazon EKS cluster  
-  - 2+ Node Groups (private subnets)  
-  - Service-linked IAM roles for EKS  
-- Amazon RDS MySQL Multi-AZ  
+## 🔧 AWS Services Used
 
-**Container Registry**  
-- Amazon ECR (private) with image scanning via Trivy  
+* **Networking:**
+    * Amazon VPC, Public/Private Subnets
+    * Internet Gateway (IGW)
+    * NAT Gateway
+* **Compute & Containerization:**
+    * Amazon EKS (Elastic Kubernetes Service)
+    * Amazon EC2 (for EKS Worker Nodes)
+    * Amazon Elastic Container Registry (ECR)
+* **Database:**
+    * Amazon RDS for MySQL (Multi-AZ)
+* **Developer Tools (CI/CD):**
+    * AWS CodePipeline
+    * AWS CodeBuild
+    * AWS CodeStar Connections (for GitHub integration)
+* **Management & Governance:**
+    * Amazon CloudWatch (Logs, Metrics, Alarms)
+    * Amazon SNS (Simple Notification Service)
+    * AWS IAM (Identity and Access Management)
+    * Amazon Route 53
+* **Infrastructure as Code:**
+    * Terraform (for Region B DR deployment)
 
-**CI/CD (CodePipeline)**  
-1. **Source**: GitHub (CodeStar Connection)  
-2. **Build**: CodeBuild  
-   - SonarQube for static analysis  
-   - Trivy for container vulnerability scanning  
-3. **Deploy**: `kubectl apply` of Kubernetes manifests to EKS  
+## 🔄 CI/CD Pipeline Details
 
-**Monitoring & Alerts**  
-- CloudWatch Metrics & Logs  
-- Log Groups for EKS & CodeBuild  
-- Alarm: EKS Node CPU > 75% → SNS notification  
+The CI/CD pipeline automates the journey of your application code from GitHub to a running service on EKS.
 
-### Region B (Disaster Recovery – us-west-2)
-- Mirror VPC, subnets, EKS, RDS (via read-replica or periodic snapshot restore)  
-- **IaC**: Terraform modules for networking, EKS, RDS, CodePipeline  
-- CodeBuild & CodePipeline set up analogous to Region A for DR testing  
+1.  **Source Stage (GitHub):**
+    * Code changes pushed to the `main` branch in GitHub automatically trigger CodePipeline via a CodeStar Connection.
+2.  **Build Stage (CodeBuild):**
+    * CodeBuild environment is provisioned.
+    * **Static Code Analysis:** SonarQube scanner runs against the PHP and Python codebases.
+    * **Dependency Management & Build:** Frontend (PHP) and Backend (Flask/Python) applications are built, and their respective Docker images are created.
+    * **Image Scanning:** Trivy scans the newly built Docker images for vulnerabilities. If critical vulnerabilities are found, the build can be configured to fail.
+    * Build artifacts, including container images and Kubernetes manifests, are prepared.
+3.  **Push to ECR Stage:**
+    * The validated container images (PHP frontend, Flask backend) are pushed to their respective repositories in Amazon ECR.
+    * ECR's private image scanning feature provides an additional layer of security post-push.
+4.  **Deploy Stage (EKS):**
+    * CodeBuild or a direct CodePipeline action applies the Kubernetes manifests (e.g., `Deployment`, `Service`, `Ingress`) to the Amazon EKS cluster in `us-east-1`. This updates the application to the latest version.
 
-### Global Services
-- **Route 53 Failover Routing**  
-  - Health checks against Region A & B ALB/NLB endpoints  
-  - Automated DNS switch to DR if primary fails  
+## 🌐 Disaster Recovery Strategy
 
-### Additional Features
-- IAM roles & service-linked roles scoped per service  
-- Private ECR image scanning (Trivy integration)  
-- Static code analysis (SonarQube integration)  
-- CloudWatch Log Groups retention & encryption  
+The DR strategy ensures the application remains available even in the event of a regional outage.
 
----
+* **Active-Passive Setup:** `us-east-1` is the primary active region handling all traffic. `us-west-2` is the passive, standby DR region.
+* **Data Replication:** Amazon RDS in `us-east-1` replicates data to `us-west-2` via cross-region read replicas (which can be promoted) or consistent snapshot replication, ensuring low Recovery Point Objective (RPO).
+* **Infrastructure as Code for DR:** The infrastructure in `us-west-2` is managed by Terraform, allowing for rapid and consistent provisioning of an identical environment to the primary.
+* **Automated Failover (Route 53):**
+    * Route 53 performs continuous health checks on the application's endpoint (e.g., ALB/NLB) in both `us-east-1` and `us-west-2`.
+    * If the primary region's endpoint fails its health checks, Route 53 automatically updates DNS records to direct all new user traffic to the `us-west-2` region.
+    * Upon failover, the RDS replica in `us-west-2` is promoted to primary, and EKS services are scaled up/activated to handle incoming traffic.
 
-## Prerequisites
-- AWS CLI v2 configured with `us-east-1` & `us-west-2` profiles  
-- `kubectl`, `eksctl`, `terraform`, `aws-sam-cli` installed  
-- GitHub repo & CodeStar connection set up  
-- SonarQube server endpoint & credentials  
-- Trivy CLI or integration in CodeBuild images  
+## ⚙️ Setup and Deployment (High-Level)
 
----
+1.  **Prerequisites:**
+    * AWS Account with administrative access.
+    * AWS CLI configured.
+    * Terraform installed (for DR setup).
+    * `kubectl` configured for EKS interaction.
+    * Docker installed.
+2.  **Clone Repository:**
+    ```bash
+    git clone [https://github.com/PavanThumati/AWS_CapStone_Final_Project.git](https://github.com/PavanThumati/AWS_CapStone_Final_Project.git)
+    cd AWS_CapStone_Final_Project
+    ```
+3.  **Region A (Primary) Deployment:**
+    * Define VPC, subnets, IGW, NAT Gateway using AWS CLI or CloudFormation/Terraform scripts (if separate IaC is used for primary).
+    * Deploy EKS Cluster and Node Groups.
+    * Create RDS MySQL Multi-AZ instance.
+    * Configure ECR repositories.
+    * Set up AWS CodePipeline, CodeBuild projects, and CodeStar Connection to your GitHub repo. This will automatically trigger initial deployments.
+    * Ensure IAM roles and security groups are correctly configured.
+4.  **Region B (Disaster Recovery) Deployment:**
+    * Navigate to the `terraform/dr-region` directory.
+    * Initialize and apply Terraform to provision the duplicate VPC, EKS cluster, and standby RDS instance.
+    * Configure the mirrored CodePipeline in `us-west-2` (if necessary, for DR drills or specific multi-region deployments).
+5.  **Route 53 Configuration:**
+    * Configure the Route 53 hosted zone with failover routing policies, pointing to the ALB/NLB endpoints in both regions, and associate health checks.
 
-## Getting Started
+*(Note: Specific `terraform` directories, `kubectl` commands, and CodePipeline configurations will be detailed in dedicated sub-directories/documentation within this repository.)*
 
-### 1. Clone the Repo
-```bash
-git clone https://github.com/<your-org>/aws-multi-region-ci-cd-arch.git
-cd aws-multi-region-ci-cd-arch
+## 📊 Monitoring and Alerting
+
+* **CloudWatch:** Collects and stores logs from EKS pods, application services, CodeBuild, CodePipeline, VPC Flow Logs, and Load Balancer Access Logs. Metrics for EKS nodes, pods, and database performance are also collected.
+* **CloudWatch Alarms:** Configured to trigger alerts for critical conditions, such as:
+    * EKS Node CPU Utilization > 75%
+    * Application error rates, latency spikes
+    * Database connection errors, high CPU/memory utilization
+* **SNS Notifications:** Alarms publish messages to SNS topics, which then notify operations teams via email, Slack, or other integrated services.
+
+## 🔒 Security Considerations
+
+* **IAM Least Privilege:** All AWS services operate with the minimum necessary IAM permissions.
+* **Network Isolation:** Application and database tiers reside in private subnets, not directly accessible from the internet.
+* **Security Groups & NACLs:** Granular traffic control at the instance and subnet levels.
+* **Container Security:** Trivy scanning during CI/CD and ECR's native scanning ensure container images are free of known vulnerabilities.
+* **Code Quality:** SonarQube helps identify and remediate security vulnerabilities within the application code itself.
+* **JWT Authentication:** Backend implements secure JWT-based authentication for API access.
+
+## 👋 Contributing
+
+Contributions are welcome! Please fork the repository and submit a pull request with your improvements.
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+````
