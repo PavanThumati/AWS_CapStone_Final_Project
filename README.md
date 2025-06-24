@@ -129,14 +129,14 @@ The CI/CD pipeline automates the journey of your application code from GitHub to
 4.  **Deploy Stage (EKS):**
     * CodeBuild or a direct CodePipeline action applies the Kubernetes manifests (e.g., `Deployment`, `Service`, `Ingress`) to the Amazon EKS cluster in `us-east-1`. This updates the application to the latest version.
 
-
-```
-┌────────────┐       ┌────────────┐       ┌──────────────┐       ┌────────────┐
-│  GitHub    │ ───▶  │ CodeBuild  │ ───▶  │ EKS/Kubernetes│ ───▶ │ CodeDeploy │
-└────────────┘       └────────────┘       └──────────────┘       └────────────┘
-     ▲                        │                   │                       │
-     └─────────────[Triggered on push]────────────┴────[Rolling updates / hooks]
-```
+               
+                     ```
+               ┌────────────┐       ┌────────────┐       ┌──────────────┐       ┌────────────┐
+               │  GitHub    │ ───▶ │ CodeBuild  │ ───▶  │       ECR    │ ───▶ │EKS/Kubernetes│
+               └────────────┘       └────────────┘       └──────────────┘       └────────────┘
+                    ▲                        │                   │                       │
+                    └─────────────[Triggered on push]────────────┴────[Rolling updates / hooks]
+               ```
 
 ## 🌐 Disaster Recovery Strategy
 
@@ -195,13 +195,9 @@ The DR strategy ensures the application remains available even in the event of a
 * **Security Groups & NACLs:** Granular traffic control at the instance and subnet levels.
 * **Container Security:** Trivy scanning during CI/CD and ECR's native scanning ensure container images are free of known vulnerabilities.
 * **Code Quality:** SonarQube helps identify and remediate security vulnerabilities within the application code itself.
-* **JWT Authentication:** Backend implements secure JWT-based authentication for API access.
 
 ## 👋 Contributing
 
 Contributions are welcome! Please fork the repository and submit a pull request with your improvements.
 
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
 ````
