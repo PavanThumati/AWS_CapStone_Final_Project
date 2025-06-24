@@ -163,7 +163,7 @@ The DR strategy ensures the application remains available even in the event of a
     * Docker installed.
 2.  **Clone Repository:**
     ```bash
-    git clone [https://github.com/PavanThumati/AWS_CapStone_Final_Project.git](https://github.com/PavanThumati/AWS_CapStone_Final_Project.git)
+    git clone https://github.com/PavanThumati/AWS_CapStone_Final_Project.git
     cd AWS_CapStone_Final_Project
     ```
 3.  **Region A (Primary) Deployment:**
