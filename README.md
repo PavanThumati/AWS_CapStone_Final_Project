@@ -14,22 +14,22 @@ While a visual diagram is best viewed in a dedicated tool, this section describe
 53.
 
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                    GLOBAL SERVICES                                                                                |
-|                                                                                                                                                                     |
-|  +---------------------+                                                                                                                                            |
+|                                                                    GLOBAL SERVICES                                                                                    |
+|                                                                                                                                                                       |
+|  +---------------------+                                                                                                                                              |
 |  |     Amazon Route 53   |                                                                                                                                            |
-|  | (Failover Routing)  |--------------------------------------------------+----------------------------------------------------------------------------------+       |
-|  +---------------------+                                                  | (Routes to ALB)                                                                  | (Routes to ALB)       |
-|                                                                           |                                                                                  |       |
+|  | (Failover Routing)  |--------------------------------------------------+----------------------------------------------------------------------------------+        |
+|  +---------------------+                                                  | (Routes to ALB)                                                (Routes to ALB)   |        |
+|                                                                           |                                                                                  |        |
 +---------------------------------------------------------------------------|----------------------------------------------------------------------------------|-------+
                                                                             |                                                                                  |
-                                                                            |                                                                                  |
+                                                                            |                                                                                   |
 +---------------------------------------------------------------------------|---------------------------------+--------------------------------------------------|-------+
-|                                  REGION A (PRIMARY - us-east-1)           |                                 |   REGION B (DISASTER RECOVERY - us-west-2)     |
+|                                  REGION A (PRIMARY - us-east-1)           |                                 |   REGION B (DISASTER RECOVERY - us-west-2)       |
 |                                                                           |                                 |                                                  |
 |  +---------------------------+       +-------------------------------+    |    +---------------------------+       +------------------------------------+      |
 |  |       Networking          |       |        CI/CD Pipeline         |    |    |       Networking          |       |      CI/CD Pipeline (Mirrored)     |      |
-|  | - VPC                     |       | - GitHub (Source)             |    |    | - Duplicate VPC           |       | - GitHub (Source - mirrored)       |      |
+|  | - VPC                     |       | - GitHub (Source)             |    |    | - VPC                     |       | - GitHub (Source - mirrored)       |      |
 |  | - Public/Private Subnets  |       | - CodeStar Connection         |    |    | - Public/Private Subnets  |       | - CodeStar Connection              |      |
 |  | - Internet Gateway (IGW)  |       | - CodePipeline                |    |    | - Internet Gateway (IGW)  |       | - CodePipeline                     |      |
 |  | - NAT Gateway             |       |   - Build (CodeBuild +        |    |    | - NAT Gateway             |       |   - Build (CodeBuild +             |      |
@@ -45,15 +45,15 @@ While a visual diagram is best viewed in a dedicated tool, this section describe
 |  |   - 2+ Node Groups        |       |   (Private Image Scanning)    |    |    |   Cluster                 |       |   (Private Image Scanning)    |         |
 |  |   - PHP Frontend          |       +-------------------------------+    |    |   - 2+ Node Groups        |       +-------------------------------+         |
 |  |   - Flask/Python Backend  |                                           |    |   - PHP Frontend (DR)     |                                                  |
-|  |   - (ALB/NLB for web tier)|                                           |    |   - Flask/Python Backend (DR)|                                                  |
+|  |   - (ALB/NLB for web tier)|                                           |    |   - Flask/Python Backend (DR)|                                               |
 |  +---------------------------+                                           |    |   - (ALB/NLB for web tier)|                                                  |
 |            |                                                             |    +---------------------------+                                                  |
-|            |                                                             |              |                                                                     |
-|  +---------------------------+                                           |    +---------------------------+                                             |
-|  |      Database Tier        |                                           |    |     Database Tier         |                                             |
-|  | - Amazon RDS (MySQL)      |                                           |    | - Amazon RDS (MySQL)      |                                             |
-|  |   - Multi-AZ Deployment   |                                           |    |   (DR/Replica/Snapshot)   |                                             |
-|  +---------------------------+                                           |    +---------------------------+                                             |
+|            |                                                             |              |                                                                    |
+|  +---------------------------+                                           |    +---------------------------+                                                  |
+|  |      Database Tier        |                                           |    |     Database Tier         |                                                  |
+|  | - Amazon RDS (MySQL)      |                                           |    | - Amazon RDS (MySQL)      |                                                  |
+|  |   - Multi-AZ Deployment   |                                           |    |   (DR/Replica/Snapshot)   |                                                  |
+|  +---------------------------+                                           |    +---------------------------+                                                  |
 |                                                                           |                                                                                  |
 |  +---------------------------+                                            |                                                                                  |
 |  |   Monitoring & Alerting   |                                            |                                                                                  |
