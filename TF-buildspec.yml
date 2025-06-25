@@ -61,7 +61,7 @@ phases:
 
       - echo "Updating DB Host Endpoint..."
       - sed -i "s|DBHOST|$RDS_ENDPOINT|g" app-tier/config.py
-      - ECHO "Updating DB password..."
+      - echo "Updating DB password..."
       - sed -i "s|DBPASSWORD|$RDS_PASSWORD|g" app-tier/config.py
 
       - echo "Building and tagging frontend..."
