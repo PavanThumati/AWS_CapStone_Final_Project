@@ -10,6 +10,9 @@ This project implements a highly available and resilient multi-tier web applicat
 
 While a visual diagram is best viewed in a dedicated tool, this section describes the high-level layout. Imagine two distinct AWS regions, `us-east-1` (Primary) and `us-west-2` (Disaster Recovery), connected globally via Route 53.
 
+![diagram-export-25-6-2025-12_13_03-pm](https://github.com/user-attachments/assets/fedcc8ae-1cfe-4a77-8a7c-1b4c67f40d9a)
+
+
 ```
 
 
