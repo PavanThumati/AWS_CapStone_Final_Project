@@ -13,12 +13,11 @@ While a visual diagram is best viewed in a dedicated tool, this section describe
 
 
 
-```
+
 
 ![arc-aws](https://github.com/user-attachments/assets/25c93589-4398-4dda-93a6-85e243f75a74)
 
 
-````
 
 ## ✨ Features
 
