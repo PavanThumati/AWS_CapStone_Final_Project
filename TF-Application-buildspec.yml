@@ -3,7 +3,6 @@ version: 0.2
 env:
   variables:
     DB_USERNAME: admin
-    DB_PASSWORD: adminadmin
     AWS_REGION: us-east-1
     AWS_ACCOUNT_ID: 047719630685
     BACKEND_IMAGE_REPO: backend
