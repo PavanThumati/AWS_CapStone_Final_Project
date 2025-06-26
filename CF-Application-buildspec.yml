@@ -3,7 +3,6 @@ version: 0.2
 env:
   variables:
     DB_USERNAME: admin
-    DB_PASSWORD: adminadmin
     AWS_REGION: us-west-1
     AWS_ACCOUNT_ID: 047719630685
     BACKEND_IMAGE_REPO: backend
@@ -46,6 +45,7 @@ phases:
       - echo "Fetching RDS endpoint..."
       - export RDS_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier "$DB_INSTANCE_ID" --query "DBInstances[0].Endpoint.Address" --output text --region "$AWS_REGION")
       - echo "RDS_ENDPOINT=$RDS_ENDPOINT"
+       - export RDS_PASSWORD=$(aws ssm get-parameter --name "/my/RDS/DBPassword" --with-decryption --query "Parameter.Value" --output text)
 
   build:
     commands:
@@ -60,6 +60,8 @@ phases:
 
       - echo "Updating DB Host Endpoint..."
       - sed -i "s|DBHOST|$RDS_ENDPOINT|g" app-tier/config.py
+      - echo "Updating DB password..."
+      - sed -i "s|DBPASSWORD|$RDS_PASSWORD|g" app-tier/config.py
 
       - echo "Building and tagging frontend..."
       - cd web-tier/
