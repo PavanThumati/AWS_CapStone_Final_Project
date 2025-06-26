@@ -1,4 +1,4 @@
-# AWS Capstone Final Project: Multi-Region CI/CD-Driven Application with Disaster Recovery
+# AWS Capstone Final Project: Scalable PHP and Flask Web Application Deployment on AWS EKS with Multi-IaC Strategy and Full DevOps Lifecycle
 
 This repository hosts the infrastructure as code, application code, and documentation for a robust, multi-tier application deployed across multiple AWS regions with a focus on automated CI/CD and comprehensive disaster recovery capabilities.
 
